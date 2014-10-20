@@ -25,6 +25,8 @@ var util = require('util'),
     dependencies = require('./dependencies'),
     krakenutil = require('../util'),
     pkg = require('../package'),
+    debug = require('debug')('generator-kraken'),
+    win32 = process.platform === 'win32',
     proto;
 
 
@@ -145,10 +147,21 @@ proto.files = function app() {
  */
 proto.installBower = function installBower() {
     if (!this.options['skip-install-bower']) {
-        var dependencies = this._dependencyResolver('bower');
+        //make sure bower is available on the user's PATH
+        process.env.PATH = require('path').resolve(require.resolve('bower'), '../../bin/') + ":" + process.env.PATH;
 
+        var dependencies = this._dependencyResolver('bower');
+        var done = this.async();
         if (dependencies) {
-            this.bowerInstall(dependencies, { save: true }, this.async());
+            this.bowerInstall(dependencies, { save: false }, function(err) {
+                if (err) {
+                    debug('Error during bower dependency installation %s', err.code || err);
+                    done(err);
+                } else {
+                    done();
+                }
+
+            });
         }
     }
 };
@@ -160,8 +173,17 @@ proto.installBower = function installBower() {
 proto.installNpm = function installNpm() {
     if (!this.options['skip-install-npm']) {
         var dependencies = this._dependencyResolver('npm');
+        var done = this.async();
         if (dependencies) {
-            this.npmInstall(dependencies, { save: true }, this.async());
+            this.npmInstall(dependencies, { save: true }, function(err) {
+                if (err) {
+                    debug('Error during npm dependency installation %s', err.code || err);
+                    done(err);
+                } else {
+                    done();
+                }
+
+            });
         }
     }
 };
@@ -173,9 +195,17 @@ proto.installNpm = function installNpm() {
 proto.installNpmDev = function installNpmDev() {
     if (!this.options['skip-install-npm']) {
         var dependencies = this._dependencyResolver('npmDev');
-
+        var done = this.async();
         if (dependencies) {
-            this.npmInstall(dependencies, { saveDev: true }, this.async());
+            this.npmInstall(dependencies, { saveDev: true }, function(err) {
+                if (err) {
+                    debug('Error during npm devDependency installation %s', err.code || err);
+                    done(err);
+                } else {
+                    done();
+                }
+
+            });
         }
     }
 };
