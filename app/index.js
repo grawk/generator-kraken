@@ -148,7 +148,8 @@ proto.files = function app() {
 proto.installBower = function installBower() {
     if (!this.options['skip-install-bower']) {
         //make sure bower is available on the user's PATH
-        process.env.PATH = require('path').resolve(require.resolve('bower'), '../../bin/') + ":" + process.env.PATH;
+        var pathDelimiter = (win32) ? ';' : ':';
+        process.env.PATH = require('path').resolve(require.resolve('bower'), '../../bin/') + pathDelimiter + process.env.PATH;
 
         var dependencies = this._dependencyResolver('bower');
         var done = this.async();
